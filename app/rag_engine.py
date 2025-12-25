@@ -49,7 +49,7 @@ class RAGEngine:
             from app.gcp_storage import GCPStorageManager
             self.gcp_storage = GCPStorageManager()
         except Exception as e:
-            print(f"⚠️ GCP Storage not available: {e}")
+            print(f"WARNING: GCP Storage not available: {e}")
 
     def get_embedding(self, text: str) -> List[float]:
         """Generate embedding using Gemini's embedding model."""

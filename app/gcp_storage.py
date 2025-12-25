@@ -27,7 +27,7 @@ class GCPStorageManager:
         """Get existing bucket or create new one."""
         try:
             bucket = self.client.get_bucket(self.bucket_name)
-            print(f"✅ Using existing bucket: {self.bucket_name}")
+            print(f"SUCCESS: Using existing bucket: {self.bucket_name}")
             return bucket
         except Exception:
             # Bucket doesn't exist, create it
@@ -36,10 +36,10 @@ class GCPStorageManager:
                     self.bucket_name,
                     location=os.getenv("GCP_REGION", "us-central1")
                 )
-                print(f"✅ Created new bucket: {self.bucket_name}")
+                print(f"SUCCESS: Created new bucket: {self.bucket_name}")
                 return bucket
             except Exception as e:
-                print(f"⚠️ Could not create bucket: {e}")
+                print(f"WARNING: Could not create bucket: {e}")
                 print("Using local storage fallback")
                 return None
     
@@ -58,11 +58,11 @@ class GCPStorageManager:
             
             # Make it accessible
             gcs_uri = f"gs://{self.bucket_name}/{blob_name}"
-            print(f"✅ Uploaded to: {gcs_uri}")
+            print(f"SUCCESS: Uploaded to: {gcs_uri}")
             
             return gcs_uri
         except Exception as e:
-            print(f"❌ Upload failed: {e}")
+            print(f"ERROR: Upload failed: {e}")
             return None
     
     def upload_document_bytes(self, content: bytes, filename: str, content_type: str = "application/octet-stream") -> Optional[str]:
@@ -78,11 +78,11 @@ class GCPStorageManager:
             blob.upload_from_string(content, content_type=content_type)
             
             gcs_uri = f"gs://{self.bucket_name}/{blob_name}"
-            print(f"✅ Uploaded to: {gcs_uri}")
+            print(f"SUCCESS: Uploaded to: {gcs_uri}")
             
             return gcs_uri
         except Exception as e:
-            print(f"❌ Upload failed: {e}")
+            print(f"ERROR: Upload failed: {e}")
             return None
     
     def list_documents(self) -> List[Dict]:
@@ -112,7 +112,7 @@ class GCPStorageManager:
             blob = self.bucket.blob(blob_name)
             return blob.download_as_bytes()
         except Exception as e:
-            print(f"❌ Download failed: {e}")
+            print(f"ERROR: Download failed: {e}")
             return None
     
     def delete_document(self, blob_name: str) -> bool:
@@ -125,7 +125,7 @@ class GCPStorageManager:
             blob.delete()
             return True
         except Exception as e:
-            print(f"❌ Delete failed: {e}")
+            print(f"ERROR: Delete failed: {e}")
             return False
     
     def save_metadata(self, doc_id: str, metadata: Dict):
@@ -141,7 +141,7 @@ class GCPStorageManager:
                 content_type="application/json"
             )
         except Exception as e:
-            print(f"❌ Metadata save failed: {e}")
+            print(f"ERROR: Metadata save failed: {e}")
     
     def get_metadata(self, doc_id: str) -> Optional[Dict]:
         """Get document metadata from Cloud Storage."""

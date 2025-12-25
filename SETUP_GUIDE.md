@@ -270,18 +270,13 @@ Without these roles, you'll encounter permission errors during deployment or run
    - Role: Search for and select "Cloud Build Service Account"
 8. Click "DONE"
 
-### Step 12: Create Key for Service Account
-1. On the Service Accounts page, find `cloud-build-sa@rag-q-results.iam.gserviceaccount.com`
-2. Click on the service account name/email to open its details
-3. In the service account details page, click on the "Keys" tab
-4. Click the "ADD KEY" dropdown button
-5. Select "Create new key"
-6. In the dialog, select "JSON" as the key type
-7. Click "CREATE"
-8. The JSON key file will automatically download
-9. Save this file as `cloud-build-key.json` in your project folder (rename if necessary)
+### Step 12: Grant IAM Permissions to Cloud Build Service Account
 
-### Step 13: Grant IAM Permissions to Cloud Build Service Account
+**Modern GCP Note**: Cloud Build no longer requires downloading service account JSON keys. You can use either:
+- Your custom `cloud-build-sa` service account (recommended for fine-grained control)
+- Cloud Build's built-in service account: `[PROJECT_NUMBER]@cloudbuild.gserviceaccount.com`
+
+We'll use the custom service account approach for clarity:
 1. In the GCP Console, click the hamburger menu (☰) in the top-left corner
 2. Go to "IAM & Admin" → "IAM"
 3. On the IAM page, scroll through the list or use the search box to find: `cloud-build-sa@rag-q-results.iam.gserviceaccount.com`
@@ -303,7 +298,7 @@ Without these roles, you'll encounter permission errors during deployment or run
    - "Permission denied on secret" → Add Secret Manager Secret Accessor
 7. Click "SAVE"
 
-### Step 14: Get Project Number
+### Step 13: Get Project Number
 1. In GCP Console, go to "IAM & Admin" → "Settings"
 2. Copy the "Project number" (something like 963953387804)
 
@@ -311,7 +306,7 @@ Without these roles, you'll encounter permission errors during deployment or run
 
 ## Phase 5: Set Up Cloud Storage
 
-### Step 15: Create Cloud Storage Bucket
+### Step 14: Create Cloud Storage Bucket
 1. In the GCP Console, click the hamburger menu (☰) in the top-left corner
 2. Scroll down to "Storage" section and click on "Cloud Storage" → "Buckets"
 3. On the Cloud Storage Buckets page, click the blue "+ CREATE" button
@@ -328,7 +323,7 @@ Without these roles, you'll encounter permission errors during deployment or run
 
 ## Phase 6: Set Up Secret Manager
 
-### Step 16: Create Gemini API Key Secret
+### Step 15: Create Gemini API Key Secret
 1. First, get your Gemini API key:
    - Go to: https://aistudio.google.com/app/apikey
    - Sign in and create a new API key
@@ -342,7 +337,7 @@ Without these roles, you'll encounter permission errors during deployment or run
    - Regions: Click "Select regions" and choose `us-central1`
 6. Click "CREATE SECRET"
 
-### Step 17: Grant Secret Access to Cloud Run Service Account
+### Step 16: Grant Secret Access to Cloud Run Service Account
 1. In Secret Manager, find and click on your secret `gemini-api-key` from the list
 2. In the secret details page, click on the "Permissions" tab
 3. Click the "+ ADD" button (next to "Members")
@@ -356,7 +351,7 @@ Without these roles, you'll encounter permission errors during deployment or run
 
 ## Phase 7: Set Up Artifact Registry
 
-### Step 18: Create Artifact Registry Repository
+### Step 17: Create Artifact Registry Repository
 1. In the GCP Console, click the hamburger menu (☰) in the top-left corner
 2. Scroll down to "CI/CD" section and click on "Artifact Registry"
 3. On the Artifact Registry page, click the blue "+ CREATE REPOSITORY" button
@@ -371,31 +366,36 @@ Without these roles, you'll encounter permission errors during deployment or run
 
 ## Phase 8: Set Up Cloud Build Trigger
 
-### Step 19: Enable Cloud Build API (if not already done)
+### Step 18: Enable Cloud Build API (if not already done)
 1. Go to "APIs & Services" → "Library"
 2. Search "Cloud Build API"
 3. Enable it
 
-### Step 20: Create Cloud Build Trigger
+### Step 19: Create Cloud Build Trigger
 1. In the GCP Console, click the hamburger menu (☰) in the top-left corner
 2. Go to "CI/CD" section and click on "Cloud Build" → "Triggers"
 3. On the Triggers page, click the blue "+ CREATE TRIGGER" button
 4. In the "Create trigger" form:
    - Name: `rag-pipeline-deploy`
    - Event: Select "Manual invocation"
-   - Source: If you created a GitHub repo in Step 26, select "Connect to GitHub", otherwise select "Upload source code"
+   - Source: If you created a GitHub repo in Step 25, select "Connect to GitHub", otherwise select "Upload source code"
    - Repository: Select your GitHub repo or upload local files
    - Branch: `main` (or your default branch)
    - Configuration: Select "Cloud Build configuration file"
    - Cloud Build configuration file location: `cloudbuild.yaml`
    - Service account: `cloud-build-sa@rag-q-results.iam.gserviceaccount.com`
+
+**Alternative**: Use Cloud Build's built-in service account (simpler setup):
+   - Service account: `[YOUR_PROJECT_NUMBER]@cloudbuild.gserviceaccount.com`
+   - Make sure this built-in account has the required IAM roles (Artifact Registry Writer, Cloud Run Admin, Storage Admin, Secret Manager Secret Accessor, Vertex AI User)
+
 5. Click "CREATE"
 
 ---
 
 ## Phase 9: Local Development Setup
 
-### Step 21: Create .env File
+### Step 20: Create .env File
 1. In your project folder, create file `.env`
 2. Add these lines:
 ```
@@ -406,10 +406,10 @@ GCP_REGION=us-central1
 CHROMA_PERSIST_DIR=./chroma_db
 ```
 
-### Step 22: Install Python Dependencies
+### Step 21: Install Python Dependencies
 1. In Command Prompt (venv active): `pip install -r requirements.txt`
 
-### Step 23: Test Local Development
+### Step 22: Test Local Development
 1. Run: `python -c "from app.main import app; print('Import successful')"`
 2. If no errors, local setup is working
 
@@ -417,22 +417,22 @@ CHROMA_PERSIST_DIR=./chroma_db
 
 ## Phase 9.5: Set Up Git Version Control
 
-**Note**: If you already have your RAG pipeline code in a Git repository, skip to Step 26 (Alternative cloning instructions). If you're starting fresh, follow all steps sequentially.
+**Note**: This section covers pushing your existing local code to GitHub for CI/CD integration.
 
-### Step 24: Install Git
+### Step 23: Install Git
 1. Download Git from: https://git-scm.com/download/win
 2. Run the installer
 3. During installation, use default settings
 4. After installation, open Command Prompt and run: `git --version`
 
-### Step 25: Initialize Git Repository
+### Step 24: Initialize Git Repository
 1. In Command Prompt, navigate to your project: `cd Desktop\projects_3\gcp_demo_project`
 2. Initialize Git: `git init`
 3. Set up your Git identity:
    - `git config --global user.name "Your Name"`
    - `git config --global user.email "your.email@gmail.com"`
 
-### Step 26: Create GitHub Repository (Optional but Recommended)
+### Step 25: Create GitHub Repository (Optional but Recommended)
 1. Go to https://github.com and sign in
 2. Click the "+" icon → "New repository"
 3. Repository name: `gcp-rag-pipeline` (or your choice)
@@ -441,36 +441,19 @@ CHROMA_PERSIST_DIR=./chroma_db
 6. **DO NOT** initialize with README (we already have one)
 7. Click "Create repository"
 
-**Alternative: If you already have the code in Git**
-If your RAG pipeline code is already in a Git repository, skip repository creation and clone it instead:
-```bash
-# Navigate to your projects directory
-cd Desktop/projects_3
 
-# Clone your existing repository
-git clone https://github.com/yourusername/your-repo-name.git gcp_demo_project
-
-# Navigate into the project
-cd gcp_demo_project
-
-# Verify the clone worked
-ls -la
-```
-
-**After cloning**: You can skip to **Phase 10: Build and Deploy** since your code is already in git and connected to the repository.
-
-### Step 27: Connect Local Repository to GitHub
+### Step 26: Connect Local Repository to GitHub
 1. Copy the repository URL from GitHub (looks like: https://github.com/yourusername/gcp-rag-pipeline.git)
 2. In Command Prompt: `git remote add origin https://github.com/yourusername/gcp-rag-pipeline.git`
 3. Verify: `git remote -v`
 
-### Step 28: Stage and Commit Files
+### Step 27: Stage and Commit Files
 1. Add all files: `git add .`
 2. Check status: `git status` (should show files staged)
 3. Commit: `git commit -m "Initial commit: GCP RAG Pipeline setup"`
 4. Push to GitHub: `git push -u origin main`
 
-### Step 29: Verify GitHub Upload
+### Step 28: Verify GitHub Upload
 1. Go to your GitHub repository URL
 2. You should see all your files uploaded
 3. The repository is now ready for Cloud Build integration
@@ -490,6 +473,11 @@ ls -la
 - **"Permission denied" when pushing**: Make sure you have the correct repository URL and permissions
 - **"fatal: remote origin already exists"**: Run `git remote remove origin` then add again
 - **"Your branch is ahead of 'origin/main'"**: Run `git push` to sync changes
+- **"error: src refspec main does not match any"**: Your local branch is named "master" but you're pushing to "main". Run:
+  ```bash
+  git branch -m master main  # Rename local branch to main
+  git push -u origin main    # Push the renamed branch
+  ```
 - **Lost changes**: Use `git log` to see history, `git checkout <commit-hash>` to revert
 
 ---

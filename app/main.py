@@ -46,7 +46,7 @@ def get_gcp_storage():
             from app.gcp_storage import GCPStorageManager
             _gcp_storage = GCPStorageManager()
         except Exception as e:
-            print(f"⚠️ GCP Storage not available: {e}")
+            print(f"WARNING: GCP Storage not available: {e}")
             _gcp_storage = None
     return _gcp_storage
 
