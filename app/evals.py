@@ -155,6 +155,7 @@ class EvalTracker:
         }
 
 
+
 class Timer:
     """Simple context manager for timing operations."""
     
